@@ -1,251 +1,256 @@
-﻿// ==========================================
-// Theme Toggle Functionality
-// ==========================================
-const themeToggle = document.getElementById('themeToggle');
+﻿// script.js - Premium Futuristic Portfolio
 const htmlElement = document.documentElement;
+const menuBtn = document.getElementById("menuBtn");
+const navLinks = document.getElementById("navLinks");
+const header = document.querySelector(".site-header");
+const form = document.getElementById("contactForm");
+const toast = document.getElementById("toast");
+const submitBtn = document.getElementById("submitBtn");
+const backToTop = document.getElementById("backToTop");
 
-// Check for saved theme preference or default to 'dark'
-const currentTheme = localStorage.getItem('theme') || 'dark';
-htmlElement.setAttribute('data-theme', currentTheme);
-
-// Theme toggle event listener
-themeToggle.addEventListener('click', () => {
-  const theme = htmlElement.getAttribute('data-theme');
-  const newTheme = theme === 'dark' ? 'light' : 'dark';
-  
-  htmlElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
+// ===== MOBILE NAVIGATION =====
+menuBtn?.addEventListener("click", () => {
+  const isOpen = menuBtn.getAttribute("aria-expanded") === "true";
+  menuBtn.setAttribute("aria-expanded", String(!isOpen));
+  navLinks.classList.toggle("open");
 });
 
-// ==========================================
-// Mobile Menu Toggle
-// ==========================================
-const menuBtn = document.getElementById('menuBtn');
-const navLinks = document.getElementById('navLinks');
-
-menuBtn.addEventListener('click', () => {
-  const isOpen = menuBtn.getAttribute('aria-expanded') === 'true';
-  menuBtn.setAttribute('aria-expanded', !isOpen);
-  navLinks.classList.toggle('open');
-});
-
-// Close menu when a link is clicked
-navLinks.querySelectorAll('a').forEach(link => {
-  link.addEventListener('click', () => {
-    menuBtn.setAttribute('aria-expanded', 'false');
-    navLinks.classList.remove('open');
+navLinks?.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", () => {
+    menuBtn?.setAttribute("aria-expanded", "false");
+    navLinks.classList.remove("open");
   });
 });
 
-// Close menu when clicking outside
-document.addEventListener('click', (e) => {
-  const isMenuBtn = e.target.closest('.menu-btn');
-  const isNavLinks = e.target.closest('.nav-links');
-  
-  if (!isMenuBtn && !isNavLinks && navLinks.classList.contains('open')) {
-    menuBtn.setAttribute('aria-expanded', 'false');
-    navLinks.classList.remove('open');
+document.addEventListener("click", (e) => {
+  const inBtn = e.target.closest(".menu-btn");
+  const inNav = e.target.closest(".nav-links");
+  if (!inBtn && !inNav && navLinks?.classList.contains("open")) {
+    menuBtn?.setAttribute("aria-expanded", "false");
+    navLinks.classList.remove("open");
   }
 });
 
-// Close menu on escape key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && navLinks.classList.contains('open')) {
-    menuBtn.setAttribute('aria-expanded', 'false');
-    navLinks.classList.remove('open');
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && navLinks?.classList.contains("open")) {
+    menuBtn?.setAttribute("aria-expanded", "false");
+    navLinks.classList.remove("open");
   }
 });
 
-// ==========================================
-// Reveal Animation on Scroll
-// ==========================================
-const revealElements = document.querySelectorAll('.reveal');
+// ===== INTERSECTION OBSERVER FOR REVEAL ANIMATIONS =====
+const revealElements = document.querySelectorAll(".reveal");
+const revealObserver = new IntersectionObserver(
+  (entries, obs) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        obs.unobserve(entry.target);
+      }
+    });
+  },
+  { threshold: 0.15, rootMargin: "0px 0px -100px 0px" }
+);
+revealElements.forEach((el) => revealObserver.observe(el));
 
-const revealOptions = {
-  threshold: 0.15,
-  rootMargin: '0px 0px -100px 0px'
-};
-
-const revealOnScroll = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      revealOnScroll.unobserve(entry.target);
-    }
-  });
-}, revealOptions);
-
-revealElements.forEach(element => revealOnScroll.observe(element));
-
-// ==========================================
-// Smooth Scroll for Navigation Links
-// ==========================================
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-  anchor.addEventListener('click', function (e) {
-    const href = this.getAttribute('href');
-    if (href !== '#' && document.querySelector(href)) {
+// ===== SMOOTH SCROLL TO SECTIONS =====
+document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+  anchor.addEventListener("click", (e) => {
+    const href = anchor.getAttribute("href");
+    if (href && href !== "#" && document.querySelector(href)) {
       e.preventDefault();
       const target = document.querySelector(href);
-      const headerHeight = document.querySelector('.site-header').offsetHeight;
-      const targetPosition = target.offsetTop - headerHeight;
-      
-      window.scrollTo({
-        top: targetPosition,
-        behavior: 'smooth'
-      });
+      const headerHeight = header ? header.offsetHeight : 0;
+      const top = target.offsetTop - headerHeight;
+      window.scrollTo({ top, behavior: "smooth" });
     }
   });
 });
 
-// ==========================================
-// Form Submission Handler
-// ==========================================
-const contactForm = document.querySelector('.contact-form');
-if (contactForm) {
-  contactForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+// ===== HEADER BACKDROP & BACK TO TOP ON SCROLL =====
+window.addEventListener("scroll", () => {
+  const y = window.scrollY || document.documentElement.scrollTop;
+
+  if (header) {
+    header.style.backdropFilter = y > 50 ? "blur(18px)" : "blur(16px)";
+  }
+
+  if (backToTop) {
+    backToTop.classList.toggle("show", y > 350);
+  }
+});
+
+backToTop?.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+// ===== INTEREST TAG CLICK ANIMATION =====
+document.querySelectorAll(".interest-tags span").forEach((tag) => {
+  tag.addEventListener("click", () => {
+    tag.style.transform = "scale(0.94)";
+    setTimeout(() => {
+      tag.style.transform = "";
+    }, 150);
+  });
+
+  tag.addEventListener("mouseenter", () => {
+    tag.style.transition = "all 0.35s cubic-bezier(0.23, 1, 0.32, 1)";
+  });
+});
+
+// ===== TOUCH DEVICE DETECTION =====
+const isTouchDevice = () =>
+  typeof window !== "undefined" &&
+  ("ontouchstart" in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
+if (isTouchDevice()) htmlElement.classList.add("touch-device");
+
+// ===== VIEWPORT HEIGHT FIX =====
+const setVH = () => {
+  const vh = window.innerHeight * 0.01;
+  htmlElement.style.setProperty("--vh", `${vh}px`);
+};
+setVH();
+window.addEventListener("resize", setVH);
+window.addEventListener("orientationchange", setVH);
+
+// ===== CONTACT FORM SUBMISSION =====
+form?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  submitBtn?.classList.add("loading");
+  if (submitBtn) submitBtn.textContent = "Sending...";
+
+  const formData = new FormData(form);
+
+  try {
+    const response = await fetch(form.action, {
+      method: form.method,
+      body: formData,
+      headers: { Accept: "application/json" }
+    });
+
+    if (response.ok) {
+      form.reset();
+      toast?.classList.add("show");
+      if (submitBtn) submitBtn.textContent = "✓ Sent";
+
+      setTimeout(() => {
+        toast?.classList.remove("show");
+        submitBtn?.classList.remove("loading");
+        if (submitBtn) submitBtn.textContent = "Send Message";
+      }, 2600);
+    } else {
+      if (submitBtn) submitBtn.textContent = "Try Again";
+      submitBtn?.classList.remove("loading");
+    }
+  } catch {
+    if (submitBtn) submitBtn.textContent = "Error";
+    submitBtn?.classList.remove("loading");
+  }
+});
+
+// ===== ENHANCED SKILL BARS ANIMATION =====
+const skillBars = document.querySelectorAll(".bar span");
+const skillObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const level = entry.target.style.getPropertyValue("--level");
+        entry.target.style.width = "0%";
+        setTimeout(() => {
+          entry.target.style.transition = "width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)";
+          entry.target.style.width = level;
+        }, 100);
+        skillObserver.unobserve(entry.target);
+      }
+    });
+  },
+  { threshold: 0.5 }
+);
+skillBars.forEach((bar) => skillObserver.observe(bar));
+
+// ===== BUTTON RIPPLE EFFECT =====
+document.querySelectorAll(".btn").forEach((btn) => {
+  btn.addEventListener("mousedown", function (e) {
+    const rect = this.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const ripple = document.createElement("div");
+    ripple.style.position = "absolute";
+    ripple.style.left = x + "px";
+    ripple.style.top = y + "px";
+    ripple.style.width = "10px";
+    ripple.style.height = "10px";
+    ripple.style.background = "rgba(226, 232, 240, 0.3)";
+    ripple.style.borderRadius = "50%";
+    ripple.style.pointerEvents = "none";
+    ripple.style.transform = "scale(1)";
+    ripple.style.animation = "rippleEffect 0.6s ease-out";
+
+    this.style.position = "relative";
+    this.style.overflow = "hidden";
+    this.appendChild(ripple);
+
+    setTimeout(() => ripple.remove(), 600);
+  });
+});
+
+if (!document.querySelector("style[data-ripple]")) {
+  const style = document.createElement("style");
+  style.setAttribute("data-ripple", "true");
+  style.textContent = `
+    @keyframes rippleEffect {
+      to {
+        transform: scale(20);
+        opacity: 0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// ===== PROFILE IMAGE PARALLAX EFFECT =====
+const profileGlow = document.querySelector(".profile-glow");
+if (profileGlow) {
+  document.addEventListener("mousemove", (e) => {
+    const rect = profileGlow.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
     
-    // Get form data
-    const formData = new FormData(contactForm);
-    const data = {
-      name: formData.get('name'),
-      email: formData.get('email'),
-      message: formData.get('message')
-    };
+    const distX = (e.clientX - centerX) * 0.05;
+    const distY = (e.clientY - centerY) * 0.05;
     
-    // Here you would typically send the data to a server
-    console.log('Form submitted:', data);
-    
-    // Show success message (you can customize this)
-    alert(`Thank you, ${data.name}! Your message has been received. I'll get back to you soon.`);
-    
-    // Reset form
-    contactForm.reset();
+    profileGlow.style.setProperty("--parallax-x", distX + "px");
+    profileGlow.style.setProperty("--parallax-y", distY + "px");
   });
 }
 
-// ==========================================
-// Responsive Navigation Bar on Scroll
-// ==========================================
-let lastScrollTop = 0;
-const header = document.querySelector('.site-header');
-
-window.addEventListener('scroll', () => {
-  let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-  
-  // Add background opacity as user scrolls
-  if (scrollTop > 50) {
-    header.style.backdropFilter = 'blur(12px)';
-  } else {
-    header.style.backdropFilter = 'blur(10px)';
-  }
-  
-  lastScrollTop = scrollTop;
-});
-
-// ==========================================
-// Interest Tags Interaction (Optional)
-// ==========================================
-const interestTags = document.querySelectorAll('.interest-tags span');
-
-interestTags.forEach(tag => {
-  tag.addEventListener('click', () => {
-    tag.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-      tag.style.transform = '';
-    }, 200);
-  });
-});
-
-// ==========================================
-// Prevent Mobile Zoom on Input Focus
-// ==========================================
-const inputs = document.querySelectorAll('input, textarea');
-
-inputs.forEach(input => {
-  input.addEventListener('focus', () => {
-    // This helps prevent the mobile browser from zooming in
-    if (window.innerWidth < 768) {
-      input.style.fontSize = '16px';
+// ===== KEYBOARD ACCESSIBILITY ENHANCEMENTS =====
+document.querySelectorAll(".socials a, .btn, .interest-tags span").forEach((el) => {
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      el.click();
     }
   });
 });
 
-// ==========================================
-// Keyboard Navigation Support
-// ==========================================
-document.addEventListener('keydown', (e) => {
-  // Tab through form inputs
-  if (e.key === 'Tab') {
-    const focusableElements = document.querySelectorAll(
-      'a, button, input, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-    
-    if (e.shiftKey && document.activeElement === firstElement) {
-      e.preventDefault();
-      lastElement.focus();
-    } else if (!e.shiftKey && document.activeElement === lastElement) {
-      e.preventDefault();
-      firstElement.focus();
-    }
-  }
-});
-
-// ==========================================
-// Performance: Lazy load images
-// ==========================================
-if ('IntersectionObserver' in window) {
+// ===== LAZY LOADING IMAGES =====
+if ("IntersectionObserver" in window) {
   const imageObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
+    entries.forEach((entry) => {
       if (entry.isIntersecting) {
         const img = entry.target;
-        if (img.dataset.src) {
-          img.src = img.dataset.src;
-          img.removeAttribute('data-src');
-        }
+        img.src = img.dataset.src || img.src;
+        img.classList.remove("lazy");
         observer.unobserve(img);
       }
     });
   });
-  
-  document.querySelectorAll('img[data-src]').forEach(img => imageObserver.observe(img));
+
+  document.querySelectorAll("img[loading='lazy']").forEach((img) => {
+    imageObserver.observe(img);
+  });
 }
 
-// ==========================================
-// Utility: Check if touch device
-// ==========================================
-const isTouchDevice = () => {
-  return (
-    (typeof window !== 'undefined' &&
-      ('ontouchstart' in window ||
-        (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)))
-  );
-};
-
-// Add touch class if touch device
-if (isTouchDevice()) {
-  document.documentElement.classList.add('touch-device');
-}
-
-// ==========================================
-// Viewport Height Fix for Mobile
-// ==========================================
-const setVH = () => {
-  let vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
-};
-
-setVH();
-window.addEventListener('resize', setVH);
-window.addEventListener('orientationchange', setVH);
-
-// ==========================================
-// Page Load Animation
-// ==========================================
-window.addEventListener('load', () => {
-  document.body.classList.add('loaded');
-});
-
-console.log('Portfolio script loaded successfully!');
+console.log("🚀 Premium Portfolio initialized successfully");
