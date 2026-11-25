@@ -1,4 +1,4 @@
-﻿// script.js - Premium Futuristic Portfolio
+// script.js - Premium Futuristic Portfolio
 const htmlElement = document.documentElement;
 const menuBtn = document.getElementById("menuBtn");
 const navLinks = document.getElementById("navLinks");
