@@ -100,7 +100,7 @@ const easeOutCubic = (k) => 1 - Math.pow(1 - k, 3);
 
   let W = 0, H = 0, DPR = 1, small = false;
   const resize = () => {
-    DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+    DPR = Math.min(window.devicePixelRatio || 1, 1) * 0.85;
     W = window.innerWidth;
     H = window.innerHeight;
     small = W < 700;
@@ -247,24 +247,40 @@ const easeOutCubic = (k) => 1 - Math.pow(1 - k, 3);
   document.addEventListener("mouseleave", () => FX.root.classList.add("cursor-away"));
   document.addEventListener("mouseenter", () => FX.root.classList.remove("cursor-away"));
 
+  // only light up elements that are on screen
+  const onScreen = new Set();
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => (en.isIntersecting ? onScreen.add(en.target) : onScreen.delete(en.target)));
+  }, { rootMargin: "100px" });
+  lit.forEach((el) => io.observe(el));
+
+  let lastX = -1, lastY = -1, lastScroll = -1;
+
   const frame = () => {
     const { x, y, active } = FX.mouse;
     if (active) {
-      rx += (x - rx) * 0.2;
-      ry += (y - ry) * 0.2;
-      gx += (x - gx) * 0.08;
-      gy += (y - gy) * 0.08;
-      if (dot) dot.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-      if (ring) ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
-      if (glow) glow.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+      // cursor pieces — skip once they've caught up
+      if (Math.abs(x - rx) > 0.1 || Math.abs(y - ry) > 0.1 || Math.abs(x - gx) > 0.1 || Math.abs(y - gy) > 0.1) {
+        rx += (x - rx) * 0.2;
+        ry += (y - ry) * 0.2;
+        gx += (x - gx) * 0.08;
+        gy += (y - gy) * 0.08;
+        if (ring) ring.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
+        if (glow) glow.style.transform = `translate3d(${gx}px, ${gy}px, 0)`;
+      }
 
-      // read all rects first, then write (avoids layout thrash)
-      const rects = lit.map((el) => el.getBoundingClientRect());
-      lit.forEach((el, i) => {
-        const r = rects[i];
-        el.style.setProperty("--mx", `${(x - r.left).toFixed(0)}px`);
-        el.style.setProperty("--my", `${(y - r.top).toFixed(0)}px`);
-      });
+      // glass / text light — only when the mouse or the page moved
+      const sy = window.scrollY;
+      if (x !== lastX || y !== lastY || sy !== lastScroll) {
+        if (dot) dot.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        const els = [...onScreen];
+        const rects = els.map((el) => el.getBoundingClientRect());
+        els.forEach((el, i) => {
+          el.style.setProperty("--mx", `${Math.round(x - rects[i].left)}px`);
+          el.style.setProperty("--my", `${Math.round(y - rects[i].top)}px`);
+        });
+        lastX = x; lastY = y; lastScroll = sy;
+      }
     }
     requestAnimationFrame(frame);
   };
@@ -313,4 +329,72 @@ const easeOutCubic = (k) => 1 - Math.pow(1 - k, 3);
       card.style.removeProperty("--ry");
     });
   });
+})();
+
+/* ================================================================
+   6. BUTTERY SMOOTH SCROLL (mouse wheel / trackpad, desktop only)
+   Works with the page's normal scroll position, so anchors, the
+   back-to-top button and the reveal animations keep working as-is.
+   ================================================================ */
+(() => {
+  if (!FX.finePointer || FX.reduceMotion) return;
+
+  const EASE = 0.09;          // lower = silkier / longer glide
+  let target = window.scrollY;
+  let current = window.scrollY;
+  let running = false;
+  let lastTime = 0;
+
+  const maxScroll = () => document.documentElement.scrollHeight - window.innerHeight;
+
+  // let elements that scroll on their own keep their wheel
+  const scrollsItself = (el) => {
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+      if (n.matches && n.matches("textarea, .nav-links.open")) return true;
+      const st = getComputedStyle(n);
+      if (/(auto|scroll)/.test(st.overflowY) && n.scrollHeight > n.clientHeight) return true;
+    }
+    return false;
+  };
+
+  const step = (now) => {
+    const dt = Math.min(64, now - (lastTime || now)) / 16.67; // frame-rate independent
+    lastTime = now;
+    const k = 1 - Math.pow(1 - EASE, dt || 1);
+    current += (target - current) * k;
+
+    if (Math.abs(target - current) < 0.4) {
+      current = target;
+      running = false;
+    }
+    window.scrollTo({ top: current, behavior: "instant" });
+    if (running) requestAnimationFrame(step);
+    else lastTime = 0;
+  };
+
+  window.addEventListener("wheel", (e) => {
+    if (e.ctrlKey || e.defaultPrevented) return;                    // pinch-zoom
+    if (FX.root.classList.contains("is-loading")) return;
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;            // sideways swipes
+    if (scrollsItself(e.target)) return;
+
+    e.preventDefault();
+    let delta = e.deltaY;
+    if (e.deltaMode === 1) delta *= 16;                             // lines
+    else if (e.deltaMode === 2) delta *= window.innerHeight;        // pages
+
+    if (!running) { current = window.scrollY; target = current; }
+    target = Math.max(0, Math.min(maxScroll(), target + delta));
+
+    if (!running) { running = true; requestAnimationFrame(step); }
+  }, { passive: false });
+
+  // any other kind of scrolling (keyboard, scrollbar, nav links,
+  // back-to-top) takes over cleanly
+  const sync = () => { if (!running) { target = current = window.scrollY; } };
+  window.addEventListener("scroll", sync, { passive: true });
+  ["keydown", "pointerdown"].forEach((ev) =>
+    window.addEventListener(ev, () => { running = false; target = current = window.scrollY; }, { passive: true })
+  );
+  window.addEventListener("resize", () => { target = Math.min(target, maxScroll()); });
 })();

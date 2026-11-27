@@ -17,7 +17,7 @@
   --glass-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025) 60%);
   --glass-bg-strong: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04) 60%);
   --glass-border: rgba(255, 255, 255, 0.11);
-  --glass-blur: blur(26px) saturate(165%);
+  --glass-blur: blur(20px) saturate(165%);
   --glass-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
     inset 0 -1px 0 rgba(255, 255, 255, 0.03),
@@ -63,6 +63,7 @@ a { color: inherit; text-decoration: none; }
 /* ===== Ambient light (what the glass refracts) ===== */
 .ambient {
   position: fixed;
+  transform: translateZ(0);
   inset: 0;
   z-index: -1;
   overflow: hidden;
@@ -72,7 +73,6 @@ a { color: inherit; text-decoration: none; }
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
   opacity: 0.55;
   will-change: transform;
 }
@@ -80,19 +80,19 @@ a { color: inherit; text-decoration: none; }
 .b1 {
   width: 46vw; height: 46vw;
   top: -12vw; left: -10vw;
-  background: radial-gradient(circle, rgba(70, 140, 255, 0.55), transparent 65%);
+  background: radial-gradient(circle, rgba(70, 140, 255, 0.42), rgba(70, 140, 255, 0.12) 40%, transparent 70%);
   animation: drift1 26s ease-in-out infinite;
 }
 .b2 {
   width: 40vw; height: 40vw;
   top: 30vh; right: -14vw;
-  background: radial-gradient(circle, rgba(150, 120, 255, 0.45), transparent 65%);
+  background: radial-gradient(circle, rgba(150, 120, 255, 0.34), rgba(150, 120, 255, 0.1) 40%, transparent 70%);
   animation: drift2 32s ease-in-out infinite;
 }
 .b3 {
   width: 34vw; height: 34vw;
   bottom: -14vw; left: 26vw;
-  background: radial-gradient(circle, rgba(60, 220, 200, 0.28), transparent 65%);
+  background: radial-gradient(circle, rgba(60, 220, 200, 0.22), rgba(60, 220, 200, 0.06) 40%, transparent 70%);
   animation: drift3 38s ease-in-out infinite;
 }
 
@@ -1263,7 +1263,6 @@ a { color: inherit; text-decoration: none; }
   .contact-form .btn { justify-self: stretch; }
   .toast { left: 14px; right: 14px; text-align: center; transform: translateY(-20px); }
   .toast.show { transform: none; }
-  .blob { filter: blur(70px); }
 }
 
 /* =================================================================
@@ -1631,7 +1630,6 @@ html.cursor-away .cursor-glow { opacity: 0; }
   inset: 0;
   width: 100%;
   height: 100%;
-  filter: blur(0.6px);
   opacity: 0.9;
   -webkit-mask-image: radial-gradient(120% 90% at 50% 45%, #000 40%, transparent 85%);
   mask-image: radial-gradient(120% 90% at 50% 45%, #000 40%, transparent 85%);
